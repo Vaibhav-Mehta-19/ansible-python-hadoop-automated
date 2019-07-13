@@ -1,0 +1,55 @@
+- hosts: 192.168.43.254
+  vars_files:
+     - master.yml
+
+  tasks:
+  - package:
+        name: "hadoop-1.2.1-1.x86_64.rpm"
+        state: present
+  - package:
+        name: "jdk-8u171-linux-x64.rpm"
+        state: present 
+  - copy:
+       src: /root/Desktop/hosts
+       dest: /etc/hosts
+  - lineinfile:
+        path: /root/.bashrc
+        insertafter: EOF
+        line: "export JAVA_HOME=/usr/java/jdk1.8-2000:1.8.0_171-fcs.x86_64"
+        
+  - lineinfile:
+        path: /root/.bashrc
+        insertafter: EOF
+        line: "export PATH=/usr/java/jdk1.8-2000:1.8.0_171-fcs.x86_64:$PATH"
+  
+  - copy: 
+        dest: "/etc/hadoop/core-site.xml"
+        content: "<?xml version='1.0'?>\n<?xml-stylesheet type='text/xsl' href='configuration.xsl'?>\n\n<!-- Put site-specific property overrides in this file. -->\n\n<configuration>\n\n<property>\n<name>fs.default.name</name>\n<value>hdfs://{{ x }}:9001</value>\n</property>\n\n</configuration>"
+         
+                 
+- hosts: master
+  tasks:
+    - file:
+        path: "/root/hr3"
+        state: directory
+        
+    - copy:
+          dest: "/etc/hadoop/hdfs-site.xml"
+          content: "<?xml version='1.0'?>\n<?xml-stylesheet type='text/xsl' href='configuration.xsl'?>\n\n<!-- Put site-specific property overrides in this file. -->\n\n<configuration>\n\n<property>\n<name>dfs.name.dir</name>\n<value>/root/hr3</value>\n</property>\n\n</configuration>"
+    - shell: "iptables -F"
+    - shell: "hadoop namenode -format"
+      ignore_errors: yes
+    - shell: " hadoop-daemon.sh start namenode "
+      ignore_errors: yes
+
+- hosts: slave
+  tasks:
+    - file:
+        path: "/l"
+        state: directory
+    - copy:
+          dest: "/etc/hadoop/hdfs-site.xml"
+          content: "<?xml version='1.0'?>\n<?xml-stylesheet type='text/xsl' href='configuration.xsl'?>\n\n<!-- Put site-specific property overrides in this file. -->\n\n<configuration>\n\n<property>\n<name>dfs.data.dir</name> \n<value>/l</value>\n</property>\n\n</configuration>"
+          
+    - command: "iptables -F"
+    - command: " hadoop-daemon.sh start datanode "
