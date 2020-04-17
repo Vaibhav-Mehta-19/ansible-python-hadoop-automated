@@ -1,4 +1,4 @@
-- hosts: 192.168.43.254
+- hosts: localhost
   vars_files:
      - master.yml
 
